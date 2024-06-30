@@ -1,7 +1,7 @@
 # yum and service modules with sudo access
 
 ---
-- hosts: web
+- hosts: all
   become: yes
   vars: 
     username: sonal
