@@ -51,7 +51,9 @@
       dest: /tmp/mygitrepo1
 
   - name: Build Docker file
-    command: chdir=/tmp/mygitrepo1 docker build -t myadd:ansible2 .
+    command: docker build -t myadd:ansible2 .
+    args:
+      chdir: /tmp/mygitrepo1
 
   - name: Create container
     command: docker run -itd -P myadd:ansible2
