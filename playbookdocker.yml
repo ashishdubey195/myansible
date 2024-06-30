@@ -3,20 +3,59 @@
   become: true
   become_user: root
   tasks:
-  - name: install tomcat
-    yum: name=tomcat state=present
-  - name: start tomcat
-    service: name=tomcat state=started
-  - name: install docker
-    yum: name=docker state=present
-  - name: start docker
-    service: name=docker state=started
-  - name: install git
-    yum: name=git state=present
-  - name: clone a repo
-    git: repo=https://github.com/Sonal0409/AnsibleDockerdemo.git dest=/tmp/mygitrepo1
-  - name: build docker file
+  - name: Install tomcat9
+    apt:
+      name: tomcat9
+      state: present
+
+  - name: Start tomcat9
+    service:
+      name: tomcat9
+      state: started
+
+  - name: Add Docker GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    notify:
+      - update registry
+
+  - name: Add repository for Docker
+    apt_repository:
+      repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable'
+      state: present
+    notify:
+      - update registry
+
+  - name: Install Docker
+    apt:
+      name: docker-ce
+      state: present
+    notify:
+      - update registry
+
+  - name: Start Docker service
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: Install git
+    apt:
+      name: git
+      state: present
+
+  - name: Clone a repo
+    git:
+      repo: https://github.com/Sonal0409/AnsibleDockerdemo.git
+      dest: /tmp/mygitrepo1
+
+  - name: Build Docker file
     command: chdir=/tmp/mygitrepo1 docker build -t myadd:ansible2 .
-  - name: create container
+
+  - name: Create container
     command: docker run -itd -P myadd:ansible2
 
+handlers:
+  - name: update registry
+    command: apt-get update
