@@ -58,6 +58,6 @@
     - name: Create container
       command: docker run -itd -P myadd:ansible2
 
-handlers:
-  - name: update registry
-    command: apt-get update
+  handlers:
+    - name: update registry
+      command: apt-get update
