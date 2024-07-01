@@ -1,65 +1,85 @@
 ---
-- hosts: all
-  become: true
-  become_user: root
+- name: Setup Tomcat Server
+  become: yes
+
   tasks:
     - name: Update package cache
-      apt: update_cache=yes
-    - name: Install tomcat9
       apt:
-        name: tomcat9
+        update_cache: true
+
+    - name: Install Java 1.8
+      apt:
+        name: openjdk-8-jdk
         state: present
 
-    - name: Start tomcat9
+    - name: create group tomcat
+      group:
+        name: tomcat
+
+    - name: add user "tomcat"
+      user:
+        name: tomcat
+        group: tomcat
+        home: /usr/share/tomcat
+        createhome: no
+
+    - name: Download and extract Tomcat
+      unarchive:
+        src: http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.61/bin/apache-tomcat-7.0.61.tar.gz
+        dest: /opt/
+        remote_src: yes
+        creates: /opt/apache-tomcat-7.0.61
+
+    - name: Symlink install directory
+      file:
+        src: /opt/apache-tomcat-7.0.61
+        path: /usr/share/tomcat
+        state: link
+
+    - name: Change ownership of Tomcat installation
+      file:
+        path: /usr/share/tomcat/
+        owner: tomcat
+        group: tomcat
+        state: directory
+        recurse: yes
+
+    - name: Configure Tomcat server
+      template:
+        src: server.xml
+        dest: /usr/share/tomcat/conf/
+
+    - name: Create sample directory
+      file:
+        path: "/opt/apache-tomcat-7.0.61/webapps/samples"
+        state: directory
+        mode: "0777"
+
+    - name: copy war file
+      copy:
+        src: ./addressbook_main/target/addressbook.war
+        dest: /opt/apache-tomcat-7.0.61/webapps/
+      notify: restart tomcat
+
+    - name: Install Tomcat init script
+      copy:
+        src: tomcat-initscript.sh
+        dest: /etc/init.d/tomcat
+        mode: "0755"
+      notify: restart tomcat
+
+    - name: Ensure Tomcat is started
       service:
-        name: tomcat9
+        name: tomcat
         state: started
-
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-      notify:
-        - update registry
-
-    - name: Add repository for Docker
-      apt_repository:
-        repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable'
-        state: present
-      notify:
-        - update registry
-
-    - name: Install Docker
-      apt:
-        name: docker-ce
-        state: present
-      notify:
-        - update registry
-
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
-        enabled: yes
-
-    - name: Install git
-      apt:
-        name: git
-        state: present
-
-    - name: Clone a repo
-      git:
-        repo: https://github.com/ashishdubey195/AnsibleDockerdemo.git
-        dest: /tmp/mygitrepo1
-
-    - name: Build Docker file
-      shell: docker build -t myadd:ansible2 .
-      args:
-        chdir: /tmp/mygitrepo1
-
-    - name: Create container
-      shell: docker run -itd -P myadd:ansible2
 
   handlers:
-    - name: update registry
-      command: apt-get update
+    - name: restart tomcat
+      service:
+        name: tomcat
+        state: restarted
+
+    - name: start tomcat
+      service:
+        name: tomcat
+        state: started
