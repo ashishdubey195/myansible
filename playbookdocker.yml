@@ -49,7 +49,7 @@
 
     - name: Clone a repo
       git:
-        repo: https://github.com/Sonal0409/AnsibleDockerdemo.git
+        repo: https://github.com/ashishdubey195/AnsibleDockerdemo.git
         dest: /tmp/mygitrepo1
 
     - name: Build Docker file
