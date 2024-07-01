@@ -58,7 +58,7 @@
         chdir: /tmp/mygitrepo1
 
     - name: Create container
-      command: docker run -itd -P myadd:ansible2
+      shell: docker run -itd -P myadd:ansible2
 
   handlers:
     - name: update registry
