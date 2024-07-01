@@ -53,7 +53,7 @@
         dest: /tmp/mygitrepo1
 
     - name: Build Docker file
-      command: docker build -t myadd:ansible2 .
+      shell: docker build -t myadd:ansible2 .
       args:
         chdir: /tmp/mygitrepo1
 
